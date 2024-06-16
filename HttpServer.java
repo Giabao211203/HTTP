@@ -133,8 +133,11 @@ public class HttpServer {
             }
         
             File file = new File("www", path);
+            boolean fileExists = file.exists();
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-                writer.write(System.lineSeparator());
+                if (fileExists && file.length() > 0) {
+                    writer.write(System.lineSeparator()); // Add a newline if the file is not empty
+                }
                 writer.write(body);
                 out.println("HTTP/1.1 200 OK");
                 out.println("Content-Type: text/plain");
@@ -149,6 +152,7 @@ public class HttpServer {
         
             out.flush();
         }
+        
 
         private void handlePutRequest(String path, BufferedReader in, PrintWriter out) throws IOException {
             // Skip headers
