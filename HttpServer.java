@@ -111,22 +111,23 @@ public class HttpServer {
         }
 
         private void handlePostRequest(String path, BufferedReader in, PrintWriter out) throws IOException {
-            StringBuilder payload = new StringBuilder();
+            // Skip headers
             String line;
             while ((line = in.readLine()) != null && !line.isEmpty()) {
-                payload.append(line).append("\n");
+                // Read until the empty line which indicates the end of the headers
             }
-
+        
             // Read the actual data sent in the POST request
+            StringBuilder payload = new StringBuilder();
             while (in.ready()) {
                 payload.append((char) in.read());
             }
-
+        
             String body = payload.toString();
             if (path.startsWith("/")) {
                 path = path.substring(1); // Remove leading slash
             }
-
+        
             File file = new File("www", path);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 writer.write(body);
@@ -140,8 +141,9 @@ public class HttpServer {
                 out.println();
                 out.println("Error saving file");
             }
-
+        
             out.flush();
         }
+        
     }
 }
