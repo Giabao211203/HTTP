@@ -49,6 +49,10 @@ public class HttpServer {
                     handleGetRequest(path, out, socket.getOutputStream());
                 } else if (method.equals("POST")) {
                     handlePostRequest(path, in, out);
+                } else if (method.equals("PUT")) {
+                    handlePutRequest(path, in, out);
+                } else if (method.equals("DELETE")) {
+                    handleDeleteRequest(path, out);
                 } else {
                     out.println("HTTP/1.1 400 Bad Request");
                     out.println("Content-Type: text/plain");
@@ -129,7 +133,8 @@ public class HttpServer {
             }
         
             File file = new File("www", path);
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+                writer.write(System.lineSeparator());
                 writer.write(body);
                 out.println("HTTP/1.1 200 OK");
                 out.println("Content-Type: text/plain");
@@ -144,6 +149,69 @@ public class HttpServer {
         
             out.flush();
         }
+
+        private void handlePutRequest(String path, BufferedReader in, PrintWriter out) throws IOException {
+            // Skip headers
+            String line;
+            while ((line = in.readLine()) != null && !line.isEmpty()) {
+                // Read until the empty line which indicates the end of the headers
+            }
+
+            // Read the actual data sent in the POST request            
+            StringBuilder payload = new StringBuilder();
+            while (in.ready()) {
+                payload.append((char) in.read());
+            }
+            
+            // Write payload to the file
+            String body = payload.toString();
+            if (path.startsWith("/")) {
+                path = path.substring(1); // Remove leading slash
+            }
+
+            File file = new File("www", path);
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) { // Overwrite mode
+                writer.write(body);
+                out.println("HTTP/1.1 200 OK");
+                out.println("Content-Type: text/plain");
+                out.println();
+                out.println("File updated successfully");
+            } catch (IOException e) {
+                out.println("HTTP/1.1 500 Internal Server Error");
+                out.println("Content-Type: text/plain");
+                out.println();
+                out.println("Error updating file");
+            }
+
+            out.flush();
+        }
         
+        private void handleDeleteRequest(String path, PrintWriter out) throws IOException {
+            if (path.startsWith("/")) {
+                path = path.substring(1); // Remove leading slash
+            }
+
+            File file = new File("www", path);
+            if (file.exists() && !file.isDirectory()) {
+                if (file.delete()) {
+                    out.println("HTTP/1.1 200 OK");
+                    out.println("Content-Type: text/plain");
+                    out.println();
+                    out.println("File deleted successfully");
+                } else {
+                    out.println("HTTP/1.1 500 Internal Server Error");
+                    out.println("Content-Type: text/plain");
+                    out.println();
+                    out.println("Error deleting file");
+                }
+            } else {
+                out.println("HTTP/1.1 404 Not Found");
+                out.println("Content-Type: text/plain");
+                out.println();
+                out.println("404 Not Found");
+            }
+
+            out.flush();
+        }
     }
 }
